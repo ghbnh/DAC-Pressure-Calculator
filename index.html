@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#163b63"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="DAC Calc">
+<meta name="description" content="Diamond Raman and Ruby R1 pressure calculator. Offline ready.">
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/svg+xml" href="./icons/icon.svg"><title>DAC Pressure Calculator</title>
+<style>
+:root{color-scheme:light;--ink:#12233a;--muted:#61718a;--bd:#d9e3f0;--accent:#1a65ae}
+*{box-sizing:border-box}body{margin:0;background:#f2f5f9;color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1060px;margin:auto;padding:26px 18px 45px}header{margin-bottom:22px}h1{font-size:clamp(22px,4vw,29px);margin:0}header p{color:var(--muted);margin:4px 0}section.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+article,.info{background:#fff;border:1px solid var(--bd);border-radius:17px;padding:22px;box-shadow:0 6px 18px #152c4610}h2{font-size:19px;margin:0}small,.hint{color:var(--muted)}.sub{font-size:12px;color:var(--muted);margin:3px 0 20px}
+.field{margin-top:16px}label{display:block;font-weight:650;font-size:13px;margin-bottom:7px}
+input{width:100%;min-height:48px;padding:10px 12px;border:1px solid #bac9d9;border-radius:10px;font-size:18px;color:var(--ink);background:white}
+input:focus{outline:3px solid #2075c52b;border-color:var(--accent)}.result{margin-top:20px;background:#eaf3ff;border-radius:12px;padding:16px;border:1px solid #d4e6fa}.ruby .result{background:#fff0f3;border-color:#ffe0e7}
+.number{font-size:35px;font-weight:800;font-variant-numeric:tabular-nums}.number span{font-size:15px;font-weight:500}
+.hint{font-size:13px;margin-top:7px}.warn{font-size:12px;color:#99540c;min-height:20px;margin-top:10px}
+.buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}button{border:1px solid #c5d8e8;border-radius:9px;padding:10px 12px;min-height:44px;color:#17558d;background:white;font-weight:650;cursor:pointer}
+.info{margin-top:20px}.info h3{margin:0 0 8px}.info p{font-size:13px;color:#40526c;margin:8px 0}
+footer{font-size:12px;color:var(--muted);margin-top:18px}#toast{position:fixed;bottom:23px;left:50%;transform:translateX(-50%);background:#132e4a;color:#fff;padding:10px 17px;border-radius:10px;display:none}
+@media(max-width:740px){main{padding:calc(15px + env(safe-area-inset-top)) max(13px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(13px,env(safe-area-inset-left))}.grid{grid-template-columns:1fr!important}article,.info{padding:19px}.number{font-size:39px}}
+</style></head><body><main><header><h1>DAC Pressure Calculator</h1><p>金刚石 Raman 高频边缘 · 红宝石 R₁ 荧光压力计算</p></header>
+<section class="grid">
+<article><h2>◇ Diamond Raman</h2><div class="sub">Akahama–Kawamura (2006) · 高频边缘测压</div>
+<div class="field"><label for="d-ref">常压参考波数 ω₀ (cm⁻¹)</label><input id="d-ref" type="number" step="any" inputmode="decimal" value="1334"></div>
+<div class="field"><label for="d-peak">测得高波数边缘 ω (cm⁻¹)</label><input id="d-peak" type="number" step="any" inputmode="decimal" value="1391.55"></div>
+<div class="result"><small>计算压力 · Peak → P</small><div class="number" id="d-out">— <span>GPa</span></div></div>
+<div class="field"><label for="d-target">目标压力 P (GPa) · 反算峰位</label><input id="d-target" type="number" step="any" inputmode="decimal" value="25"></div>
+<div class="hint" id="d-pred"></div><div class="warn" id="d-warn" role="status"></div>
+<div class="buttons"><button id="d-copy">复制结果</button><button id="d-reset">恢复 25 GPa 示例</button></div></article>
+<article class="ruby"><h2>◆ Ruby R₁ Fluorescence</h2><div class="sub">Mao et al. (1986) · R₁ 荧光测压</div>
+<div class="field"><label for="r-ref">常压参考波长 λ₀ (nm)</label><input id="r-ref" type="number" step="any" inputmode="decimal" value="694.2"></div>
+<div class="field"><label for="r-peak">测得 R₁ 波长 λ (nm)</label><input id="r-peak" type="number" step="any" inputmode="decimal" value="702.94"></div>
+<div class="result"><small>计算压力 · Peak → P</small><div class="number" id="r-out">— <span>GPa</span></div></div>
+<div class="field"><label for="r-target">目标压力 P (GPa) · 反算波长</label><input id="r-target" type="number" step="any" inputmode="decimal" value="25"></div>
+<div class="hint" id="r-pred"></div><div class="warn" id="r-warn" role="status"></div>
+<div class="buttons"><button id="r-copy">复制结果</button><button id="r-reset">恢复 25 GPa 示例</button></div></article>
+</section>
+<section class="info"><h3>公式与适用范围</h3>
+<p><b>Diamond:</b> P = 547x(1 + 1.375x), x = (ω − ω₀)/ω₀。请使用金刚石 Raman 高频边缘，非简单峰顶。</p>
+<p><b>Ruby:</b> P = (1904/7.665)[(λ/λ₀)<sup>7.665</sup> − 1]。R₁ 是 Cr³⁺ 荧光而非 Raman 峰。超过约 80 GPa 属原始标定范围外推。</p>
+<p>均为常温标定；不能直接校正高温或非静水压条件。Akahama & Kawamura (2006), J. Appl. Phys. 100, 043516; Mao et al. (1986), JGR 91, 4673–4676。</p></section>
+<footer>首次联网访问完成缓存后，可在 iPhone 主屏幕离线运行。实验正式报告请注明压力标定方法。</footer></main><div id="toast" role="status"></div>
+<script>
+"use strict";
+const el=id=>document.getElementById(id);
+const cfg={d:{name:"Diamond Raman",unit:"cm⁻¹",ref:"d-ref",peak:"d-peak",target:"d-target",out:"d-out",pred:"d-pred",warn:"d-warn"},r:{name:"Ruby R₁",unit:"nm",ref:"r-ref",peak:"r-peak",target:"r-target",out:"r-out",pred:"r-pred",warn:"r-warn"}};
+function read(id){let s=el(id).value.trim();return s===""?NaN:Number(s)}
+function toPressure(kind,peak,ref){let x=(peak-ref)/ref;return kind==="d"?547*x*(1+1.375*x):1904/7.665*(Math.pow(peak/ref,7.665)-1)}
+function toPeak(kind,p,ref){if(kind==="d"){let x=2*p/(547+Math.sqrt(547*547+4*547*1.375*p));return ref*(1+x)}return ref*Math.pow(1+7.665*p/1904,1/7.665)}
+function compute(kind){const c=cfg[kind],ref=read(c.ref),peak=read(c.peak),target=read(c.target),warnings=[];
+let p=NaN,pred=NaN;
+if(!Number.isFinite(ref)||ref<=0)warnings.push("常压参考值必须大于零。");
+else{
+if(Number.isFinite(peak)&&peak>0){p=toPressure(kind,peak,ref);if(peak<ref)warnings.push("峰位低于参考值，所得压力为负，请检查输入。")}else warnings.push("请输入有效的实测峰位。");
+if(Number.isFinite(target)&&target>=0)pred=toPeak(kind,target,ref);else warnings.push("目标压力必须为非负数。");
+if(kind==="r"&&((Number.isFinite(p)&&p>80)||(Number.isFinite(target)&&target>80)))warnings.push("Ruby 超过约 80 GPa 的原始标定范围，属于外推。");
+if(kind==="d"&&((Number.isFinite(p)&&p>300)||(Number.isFinite(target)&&target>300)))warnings.push("极高压需核对金刚石 Raman 高频边缘与标定适用性。");
+}
+el(c.out).textContent=Number.isFinite(p)?p.toFixed(2)+" GPa":"— GPa";
+el(c.pred).textContent=Number.isFinite(pred)?"预测峰位："+pred.toFixed(3)+" "+c.unit:"预测峰位：—";
+el(c.warn).textContent=warnings.join(" ");
+return {p,peak,ref}}
+let toastTimer;
+function toast(s){el("toast").textContent=s;el("toast").style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>el("toast").style.display="none",1700)}
+async function copy(kind){let c=cfg[kind],v=compute(kind);if(!Number.isFinite(v.p)){toast("请填写有效数据");return}
+let text=c.name+"\n参考峰位："+v.ref+" "+c.unit+"\n测量峰位："+v.peak+" "+c.unit+"\n压力："+v.p.toFixed(2)+" GPa";
+try{if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(text);else{let t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();if(!document.execCommand("copy"))throw Error();t.remove()}toast("结果已复制")}catch(e){toast("无法自动复制，请手动选择结果")}}
+for(let kind of ["d","r"]){let c=cfg[kind];for(let k of ["ref","peak","target"])el(c[k]).addEventListener("input",()=>compute(kind));el(kind+"-copy").addEventListener("click",()=>copy(kind));el(kind+"-reset").addEventListener("click",()=>{el(c.ref).value=kind==="d"?"1334":"694.2";el(c.peak).value=kind==="d"?"1391.55":"702.94";el(c.target).value="25";compute(kind)});compute(kind)}
+if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost"))window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(console.warn));
+</script></body></html>
